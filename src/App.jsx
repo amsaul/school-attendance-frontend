@@ -6,7 +6,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import AttendanceList from './components/AttendanceList';
 
 // Base URL for your Node.js backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://schoolattendancebackend.onrender.com/api';
 
 function App() {
   const [viewState, setViewState] = useState('FORM'); // FORM, LOADING, STATUS, LIST

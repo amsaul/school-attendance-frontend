@@ -33,7 +33,7 @@ function StatusMessage({ success, message, onDone, onViewAttendance }) {
           onClick={onDone}
           className="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg transition-colors text-sm"
         >
-          Done / Back
+          Done
         </button>
 
         {onViewAttendance && (
