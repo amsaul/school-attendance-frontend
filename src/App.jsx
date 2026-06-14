@@ -104,9 +104,6 @@ function App() {
 
   return (
     <>
-    <div className="bg-red-500 text-white text-3xl font-bold p-10 text-center">
-      If you can see this in bright red, Tailwind is working!
-    </div>
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
         {/* Header Block */}
