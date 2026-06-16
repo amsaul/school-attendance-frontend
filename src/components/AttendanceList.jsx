@@ -22,6 +22,15 @@ function getStatusLabel(record) {
   return `In ${clockInStatus === 'within_school' ? 'within school' : 'outside school'}`;
 }
 
+// Helper to get today's date formatted as YYYY-MM-DD to accurately align with record date structures
+function getTodayString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function AttendanceList({ onBack }) {
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +38,9 @@ function AttendanceList({ onBack }) {
   const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Determine if a user actively applied filters
+  const isFilteringActive = !!(searchTerm || dateFilter);
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -54,12 +66,30 @@ function AttendanceList({ onBack }) {
     fetchAttendance();
   }, [searchTerm, dateFilter]);
 
+  // Clientside filtering to isolate records to the current day when no filters are active
+  const filteredRecords = useMemo(() => {
+    if (isFilteringActive) return records;
+
+    const todayStr = getTodayString();
+
+    return records.filter((record) => {
+      if (!record.date) return false;
+      
+      // Cleans string variations or full ISO timestamps to get a standard YYYY-MM-DD slice
+      const recordDateStr = record.date.includes('T') 
+        ? record.date.split('T')[0] 
+        : record.date.substring(0, 10);
+
+      return recordDateStr === todayStr;
+    });
+  }, [records, isFilteringActive]);
+
   const sortedRecords = useMemo(() => {
-    const copy = [...records];
+    const copy = [...filteredRecords];
 
     copy.sort((a, b) => {
       if (sortBy === 'date') {
-        return String(a.date || '').localeCompare(String(b.date || ''));
+        return String(b.date || '').localeCompare(String(a.date || '')); // Newest records first
       }
 
       if (sortBy === 'name') {
@@ -74,14 +104,22 @@ function AttendanceList({ onBack }) {
     });
 
     return copy;
-  }, [records, sortBy]);
+  }, [filteredRecords, sortBy]);
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setDateFilter('');
+  };
 
   return (
     <div className="space-y-6 text-left">
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-red-900">Attendance overview</p>
+      {/* Top Heading Section */}
+      <div className="space-y-1 text-center">
+        <p className="text-xs uppercase tracking-[0.25em] text-red-900 font-semibold">Attendance overview</p>
         <h2 className="text-2xl font-bold text-slate-800">Staff attendance list</h2>
-        <p className="text-sm text-slate-500">Search by staff name, filter by day, and review each mark-in/out record in one table.</p>
+        {/* <p className="text-sm text-slate-500">
+          Showing today's records by default to manage high staff volume. Use filters to access past records.
+        </p> */}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm space-y-4">
@@ -121,10 +159,27 @@ function AttendanceList({ onBack }) {
           </label>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className="rounded-full bg-red-100 px-3 py-1 text-red-800">Maroon theme</span>
-          <span className="rounded-full bg-green-100 px-3 py-1 text-green-800">Green accent</span>
-          <span className="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Grey table</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+          {/* <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-red-100 px-3 py-1 text-red-800">Maroon theme</span>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-green-800">Green accent</span>
+            <span className="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Grey table</span>
+          </div> */}
+          
+          <div>
+            {!isFilteringActive ? (
+              <span className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-800 font-medium">
+                📅 Today Only
+              </span>
+            ) : (
+              <button 
+                onClick={handleClearFilters}
+                className="text-green-700 hover:text-green-900 underline underline-offset-2 font-medium"
+              >
+                Reset filters to see today
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -133,7 +188,11 @@ function AttendanceList({ onBack }) {
       ) : errorMessage ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div>
       ) : sortedRecords.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No attendance records match your search.</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+          {isFilteringActive 
+            ? "No attendance records match your search criteria." 
+            : "No attendance records logged yet for today."}
+        </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
@@ -145,7 +204,7 @@ function AttendanceList({ onBack }) {
                   <th className="px-4 py-3 text-left font-semibold">Category</th>
                   <th className="px-4 py-3 text-left font-semibold">Clock In</th>
                   <th className="px-4 py-3 text-left font-semibold">Clock Out</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
+                  <th className="pl-4 pr-6 py-3 text-left font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white text-slate-600">
@@ -156,8 +215,8 @@ function AttendanceList({ onBack }) {
                     <td className="px-4 py-3 capitalize">{record.category || '—'}</td>
                     <td className="px-4 py-3">{formatTime(record.clockInTime)}</td>
                     <td className="px-4 py-3">{formatTime(record.clockOutTime)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${record.status === 'within_school' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <td className="pl-4 pr-6 py-3 whitespace-nowrap">
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${record.status === 'within_school' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {getStatusLabel(record)}
                       </span>
                     </td>

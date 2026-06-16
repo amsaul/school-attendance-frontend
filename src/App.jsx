@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ClockForm from './components/ClockForm';
 import StatusMessage from './components/StatusMessage';
@@ -7,9 +7,16 @@ import AttendanceList from './components/AttendanceList';
 
 // Base URL for your Node.js backend
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://schoolattendancebackend.onrender.com/api';
+const ROUTE_LIST = '/attendance';
+const ROUTE_FORM = '/';
+
+const getViewForPath = (path) => {
+  if (path === ROUTE_LIST || path.startsWith(`${ROUTE_LIST}/`)) return 'LIST';
+  return 'FORM';
+};
 
 function App() {
-  const [viewState, setViewState] = useState('FORM'); // FORM, LOADING, STATUS, LIST
+  const [viewState, setViewState] = useState(() => getViewForPath(window.location.pathname));
   const [statusData, setStatusData] = useState({ success: false, message: '' });
 
   const handleAttendanceSubmit = async (fullName) => {
@@ -93,12 +100,29 @@ function App() {
     );
   };
 
+  useEffect(() => {
+    const handlePopState = () => {
+      setViewState(getViewForPath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path) => {
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+  };
+
   const resetToForm = () => {
+    navigateTo(ROUTE_FORM);
     setViewState('FORM');
     setStatusData({ success: false, message: '' });
   };
 
   const openAttendanceList = () => {
+    navigateTo(ROUTE_LIST);
     setViewState('LIST');
   };
 
@@ -107,10 +131,21 @@ function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
         {/* Header Block */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-800">School Portal</h1>
-          <p className="text-sm text-slate-500">Digital Attendance Terminal</p>
-        </div>
+        {/* <div className="flex flex-col gap-3 text-center mb-6 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+          <div>
+            <h1 className="text-2xl text-center font-bold text-slate-800">WCLA</h1>
+            <p className="text-sm text-center text-slate-500">Digital Attendance Terminal</p>
+          </div>
+          {viewState !== 'LIST' && (
+            <a
+              type="link"
+              onClick={openAttendanceList}
+              className="inline-flex items-center cursor-pointer justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
+            >
+              View Attendance List
+            </a>
+          )}
+        </div> */}
 
         {/* Dynamic Views */}
         {viewState === 'FORM' && (
