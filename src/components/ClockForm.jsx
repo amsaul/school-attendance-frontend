@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import AttendanceList from './AttendanceList';
 
-
 const ROUTE_LIST = '/attendance';
+const ROUTE_FORM = '/';
 
 const getViewForPath = (path) => {
   if (path === ROUTE_LIST || path.startsWith(`${ROUTE_LIST}/`)) return 'LIST';
@@ -33,17 +33,29 @@ function ClockForm({ onSubmit }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (path) => {
+  const navigateTo = (path, stateKey) => {
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
     }
+    setViewState(stateKey);
   };
 
   const openAttendanceList = () => {
-    navigateTo(ROUTE_LIST);
-    setViewState('LIST');
+    navigateTo(ROUTE_LIST, 'LIST');
   };
 
+  const openClockForm = () => {
+    navigateTo(ROUTE_FORM, 'FORM');
+  };
+
+  // Condition 1: If the state is 'LIST', completely unmount the form and render your Daily List
+  if (viewState === 'LIST') {
+    return (
+      <AttendanceList onBack={openClockForm} />
+    );
+  }
+
+  // Condition 2: Default view state fallback ('FORM') - renders your entry gate terminal screen
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="flex flex-col gap-3 text-center mb-6 sm:flex-row sm:items-center sm:justify-between sm:text-left">
@@ -51,16 +63,15 @@ function ClockForm({ onSubmit }) {
           <h1 className="text-2xl text-center font-bold text-slate-800">WCLA</h1>
           <p className="text-sm text-center text-slate-500">Digital Attendance Terminal</p>
         </div>
-        {viewState !== 'LIST' && (
-          <a
-            type="link"
-            onClick={openAttendanceList}
-            className="inline-flex items-center cursor-pointer justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
-          >
-            View Attendance List
-          </a>
-        )}
+        <button
+          type="button"
+          onClick={openAttendanceList}
+          className="inline-flex items-center cursor-pointer justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
+        >
+          View Attendance List
+        </button>
       </div>
+      
       <div>
         <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-2">
           Your Full Name
@@ -71,14 +82,14 @@ function ClockForm({ onSubmit }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Saul Bosire"
-          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400 text-base"
+          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-slate-800 placeholder-slate-400 text-base"
         />
         {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
       </div>
 
       <button
         type="submit"
-        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-transform text-lg"
+        className="w-full py-4 bg-green-700 hover:bg-green-500 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-transform text-lg"
       >
         Clock In / Clock Out
       </button>

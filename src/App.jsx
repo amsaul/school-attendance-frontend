@@ -130,22 +130,6 @@ function App() {
     <>
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
-        {/* Header Block */}
-        {/* <div className="flex flex-col gap-3 text-center mb-6 sm:flex-row sm:items-center sm:justify-between sm:text-left">
-          <div>
-            <h1 className="text-2xl text-center font-bold text-slate-800">WCLA</h1>
-            <p className="text-sm text-center text-slate-500">Digital Attendance Terminal</p>
-          </div>
-          {viewState !== 'LIST' && (
-            <a
-              type="link"
-              onClick={openAttendanceList}
-              className="inline-flex items-center cursor-pointer justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
-            >
-              View Attendance List
-            </a>
-          )}
-        </div> */}
 
         {/* Dynamic Views */}
         {viewState === 'FORM' && (
