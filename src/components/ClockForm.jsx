@@ -91,7 +91,7 @@ function ClockForm({ onSubmit }) {
         type="submit"
         className="w-full py-4 bg-green-700 hover:bg-green-500 text-white font-bold rounded-xl shadow-md active:scale-[0.98] transition-transform text-lg"
       >
-        Clock In / Clock Out
+        Clock In/Out
       </button>
 
       <p className="text-center text-xs text-slate-400 mt-4 px-4">

@@ -35,7 +35,8 @@ function AttendanceList({ onBack }) {
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [sortBy, setSortBy] = useState('date');
+  // 🔽 Default sort changed to 'clockIn' (earliest first)
+  const [sortBy, setSortBy] = useState('clockIn');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -84,10 +85,18 @@ function AttendanceList({ onBack }) {
     });
   }, [records, isFilteringActive]);
 
+  // 🔽 Updated sorting logic – includes new 'clockIn' case
   const sortedRecords = useMemo(() => {
     const copy = [...filteredRecords];
 
     copy.sort((a, b) => {
+      if (sortBy === 'clockIn') {
+        // Earliest clock‑in first; records without a time go last
+        const timeA = a.clockInTime ? new Date(a.clockInTime).getTime() : Infinity;
+        const timeB = b.clockInTime ? new Date(b.clockInTime).getTime() : Infinity;
+        return timeA - timeB;
+      }
+
       if (sortBy === 'date') {
         return String(b.date || '').localeCompare(String(a.date || '')); // Newest records first
       }
@@ -117,9 +126,6 @@ function AttendanceList({ onBack }) {
       <div className="space-y-1 text-center">
         <p className="text-xs uppercase tracking-[0.25em] text-red-900 font-semibold">Attendance overview</p>
         <h2 className="text-2xl font-bold text-slate-800">Staff attendance list</h2>
-        {/* <p className="text-sm text-slate-500">
-          Showing today's records by default to manage high staff volume. Use filters to access past records.
-        </p> */}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm space-y-4">
@@ -152,7 +158,9 @@ function AttendanceList({ onBack }) {
               onChange={(event) => setSortBy(event.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-700 outline-none focus:border-green-500"
             >
-              <option value="date">Day</option>
+              {/* 🔽 Added 'Clock In' as the first (and default) option */}
+              <option value="clockIn">Clock In (earliest first)</option>
+              <option value="date">Day (newest first)</option>
               <option value="name">Staff name</option>
               <option value="status">Status</option>
             </select>
@@ -160,12 +168,6 @@ function AttendanceList({ onBack }) {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-          {/* <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-red-100 px-3 py-1 text-red-800">Maroon theme</span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-green-800">Green accent</span>
-            <span className="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Grey table</span>
-          </div> */}
-          
           <div>
             {!isFilteringActive ? (
               <span className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-800 font-medium">
