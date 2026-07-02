@@ -19,7 +19,9 @@ function App() {
   const [viewState, setViewState] = useState(() => getViewForPath(window.location.pathname));
   const [statusData, setStatusData] = useState({ success: false, message: '' });
 
-  const handleAttendanceSubmit = async (fullName) => {
+  // Updated to accept the extra parameters (action, recordId) but we ignore them.
+  // The backend will still auto‑detect clock‑in/out based on the user's current status.
+  const handleAttendanceSubmit = async (fullName, action, recordId) => {
     setViewState('LOADING');
 
     // 1. Check if browser supports Geolocation
@@ -38,11 +40,16 @@ function App() {
         const { latitude, longitude } = position.coords;
 
         try {
-          // 3. Send payload to backend
+          // 3. Send payload to backend – the backend will decide clock‑in/out automatically.
+          // We could optionally pass the action and recordId here if the backend supports it,
+          // but the current endpoint already handles both.
           const response = await axios.post(`${API_BASE_URL}/attendance/scan`, {
             name: fullName,
             latitude,
             longitude,
+            // (Optional) you could send action and recordId if needed:
+            // action,
+            // recordId,
           });
 
           const data = response.data;
